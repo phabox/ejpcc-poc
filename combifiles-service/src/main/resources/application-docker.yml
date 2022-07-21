@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://combifiles-db:5432/combifiles
+    
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      bootstrap-servers: kafka:9092
+    producer:
+      bootstrap-servers: kafka:9092
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:8090/eureka/

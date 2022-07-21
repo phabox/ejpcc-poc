@@ -1,0 +1,65 @@
+server:
+  port: 8091
+
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "health,info"
+    web:
+      exposure:
+        include: "health,info"
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      default-filters:
+      - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
+      routes:
+      - id: accounting
+        uri: lb://accountings
+        predicates:
+        - Path=/draws/{drawId}/accountings/**, /draws/{drawId}/companies/{companyId}/accountings/**
+
+      - id: winnerEvaluation
+        uri: lb://winnerevaluation
+        predicates:
+        - Path=/draws/{drawId}/winners/**, /draws/{id}/companies/{companyId}/winners/**
+
+      - id: winningNumbers
+        uri: lb://winningnumbers
+        predicates:
+        - Path=/draws/{drawId}/winningnumbers/**
+
+      - id: combifiles
+        uri: lb://combifiles
+        predicates:
+        - Path=/draws/{drawId}/companies/{companyId}/combifiles/**, /draws/{drawId}/combifiles/**
+
+      - id: companies
+        uri: lb://companies
+        predicates:
+        - Path=/companies/**
+
+      - id: draws
+        uri: lb://draws
+        predicates:
+        - Path=/draws/**
+
+      - id: logging
+        uri: lb://logging
+        predicates:
+        - Path=/logs/**
+
+      
+            
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8090/eureka/
+
+logging:
+  level:
+    root: INFO

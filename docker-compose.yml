@@ -1,0 +1,223 @@
+version: '3.1'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8079:8080"
+    restart: unless-stopped
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+  
+  eureka:
+    restart: unless-stopped
+    build: ./service-registry
+    ports: 
+      - 8090:8090
+    environment:
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  gateway:
+    restart: unless-stopped
+    build: ./gateway-service
+    depends_on:
+      - eureka
+    ports: 
+      - 8091:8091
+    environment:
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  draws-service:
+    depends_on:
+      - draws-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./draws-service
+    ports: 
+      - 8081:8081
+    environment:
+    - "WAIT_HOSTS=draws-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  draws-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: draws
+    ports:
+      - 5432:5432
+
+  combifiles-service:
+    depends_on:
+      - combifiles-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./combifiles-service
+    ports: 
+      - 8082:8082
+    environment:
+    - "WAIT_HOSTS=combifiles-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  combifiles-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: combifiles
+    ports:
+      - 5433:5432
+
+  winnerevaluation-service:
+    depends_on:
+      - winnerevaluation-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./winnerevaluation-service
+    ports: 
+      - 8083:8083
+    environment:
+    - "WAIT_HOSTS=winnerevaluation-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  winnerevaluation-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: winnerevaluation
+    ports:
+      - 5434:5432
+
+  accountings-service:
+    depends_on:
+      - accountings-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./accountings-service
+    ports: 
+      - 8084:8084
+    environment:
+    - "WAIT_HOSTS=accountings-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  accountings-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: accountings
+    ports:
+      - 5435:5432
+
+  companies-service:
+    depends_on:
+      - companies-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./companies-service
+    ports: 
+      - 8085:8085
+    environment:
+    - "WAIT_HOSTS=companies-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  companies-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: companies
+    ports:
+      - 5436:5432
+
+  winningnumbers-service:
+    depends_on:
+      - winningnumbers-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./winningnumbers-service
+    ports: 
+      - 8086:8086
+    environment:
+    - "WAIT_HOSTS=winningnumbers-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  winningnumbers-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: winningnumbers
+    ports:
+      - 5437:5432
+
+  logging-service:
+    depends_on:
+      - logging-db
+      - kafka
+      - eureka
+    restart: unless-stopped
+    build: ./logging-service
+    ports: 
+      - 8087:8087
+    environment:
+    - "WAIT_HOSTS=logging-db:5432"
+    - "SPRING_PROFILES_ACTIVE=docker"
+
+  logging-db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: logs
+    ports:
+      - 5438:5432
+
+  ejpcc-client:
+    build: ./ejpcc-client
+    restart: unless-stopped
+    ports:
+      - 8080:8080

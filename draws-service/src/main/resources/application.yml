@@ -1,0 +1,51 @@
+server:
+  port: 8081
+
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "health,info"
+    web:
+      exposure:
+        include: "health,info"
+
+spring:
+  application:
+    name: draws
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/draws
+    username: postgres
+    password: password
+
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      bootstrap-servers: localhost:29092
+      group-id: draws
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      bootstrap-servers: localhost:29092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8090/eureka/
+
+kafka:
+  ejpcc:
+    topic: "ejpcc"
+  logs:
+    topic: "logs"
+
+logging:
+  level:
+    root: INFO
